@@ -1,4 +1,5 @@
-===>Goal of the competition:
+[g]===>Goal of the competition:
+
 AXA has provided a dataset of over 50,000 anonymized driver trips. The intent of this competition is to develop an algorithmic signature of driving type. For this competition, Kaggle participants must come up with a "telematic fingerprint" capable of distinguishing when a trip was driven by a given driver. 
 
 We are provided a directory containing about 3000 folders. Each folder represents a driver. Within each folder are 200 .csv files. Each file represents a driving trip. The trips are recordings of the car's position (in meters) every second.
