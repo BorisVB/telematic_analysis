@@ -1,3 +1,7 @@
+################################################################################################################################
+#This file aims at visualising some features of the trips
+#This includes: histograms, bar charts, scatter plots and maps of routes
+################################################################################################################################
 import numpy as np
 import matplotlib.pyplot as plt
 import random
@@ -25,7 +29,7 @@ def map_all_routes(k):
 	fig = plt.figure()
 	ax = fig.add_subplot(111, axisbg = 'w')
 	colors = ['b','g','r','c','m','y','k']
-	for i in range(1,200):
+	for i in range(1,201):
 	    with open('drivers/'+`k`+'/'+ `i`+'.csv','rb') as data: 
 	        trajet = np.genfromtxt(data,delimiter=',', dtype = float)
 	        x = [row[0] for row in trajet]
@@ -81,7 +85,7 @@ def curve_xy_2 (driver_1, driver_2, feature_1, feature_2):
 		curve_xy_1(driver_1,feature_1, feature_2)
 		curve_xy_1(driver_2, feature_1, feature_2)
 
-driver_1 = 10
+driver_1 = 1
 driver_2 =1
 feature_1 = 16
 feature_2 = 5
@@ -90,13 +94,13 @@ def main():
 
 	# call functions:
 
-	# map_all_routes(driver_1)
+	map_all_routes(driver_1)
 	# hist(driver_1,feature_1)
 	# n_hists(driver_1,feature_1)
 	# bar_chart(driver_1,feature_1)
 	# n_bar_chart(driver_1,feature_1)
 	# curve_xy_1(driver_1,feature_1, feature_2)
-	curve_xy_2 (driver_1, driver_2, feature_1, feature_2)
+	# curve_xy_2 (driver_1, driver_2, feature_1, feature_2)
 	plt.show()
 	return
 
