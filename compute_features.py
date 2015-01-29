@@ -1,3 +1,15 @@
+####################################################################################################################################
+# Program computing several features based on inital GPS coordinates of the routes (every second) such as:
+# -Lenght of the trip
+# -Duration of the trip
+# -Average speeds and several quartiles
+# -Average accelerations and several quartiles
+# -The angle between two successive position of the car (every second)
+# -Number of stops
+# etc.
+####################################################################################################################################
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 import csv
@@ -142,8 +154,6 @@ def braking_averages(Braking_deceleration, Braking_distance): #Calculate average
     return [Braking_deceleration_avg,Braking_distance_avg]
 
 def main():
-    if __name__ == '__main__':   
-
         # Create a list of drivers
         list_drivers=sorted(os.listdir('/Users/borisvalensi/desktop/telematic_analysis/drivers'))
         list_drivers=list_drivers[1:]
@@ -192,5 +202,8 @@ def main():
                 resultats.insert(0,route)
                 resultats.insert(0,drivers)
                 results.writerow(resultats)
+
     return
+if __name__ == '__main__':   
 main()
+
