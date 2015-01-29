@@ -16,8 +16,11 @@ The challenge of this competition is to identify trips which are not from the dr
 
 I am focusing on:
 1. Speed distribution
+
 2. Acceleration distribution
+
 3. Acceleration/decceleration before and after stop
+
 4. Acceleration/decceleration in curves
 
 I am currently focusing on speed and acceleration visualisation. This first involve to clean the data (removing anomalies due to GPS imprecision e.g.). I am also approaching this problem by breaking down the trips between behavior on highway, backroad, and 'midroad'.
