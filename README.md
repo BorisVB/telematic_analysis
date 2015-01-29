@@ -11,8 +11,8 @@ The challenge of this competition is to identify trips which are not from the dr
 
 **==> My approach:**
 
-1. First to be able to visually understand what are the similarities between the 200 routes associated to one driver, and the difference between two drivers.
-2.Create algorithms capable of predicting with a probability P the likelihood that a route has been driven by the designated driver
+1. First to be able to visually understand what are the similarities between the 200 routes associated to one driver, and the difference between two drivers. 
+2. Create algorithms capable of predicting with a probability P the likelihood that a route has been driven by the designated driver
 
 I am focusing on:
 1. Speed distribution
