@@ -1,4 +1,4 @@
-[g]===>Goal of the competition:
+**===>Goal of the competition:**
 
 AXA has provided a dataset of over 50,000 anonymized driver trips. The intent of this competition is to develop an algorithmic signature of driving type. For this competition, Kaggle participants must come up with a "telematic fingerprint" capable of distinguishing when a trip was driven by a given driver. 
 
@@ -9,7 +9,8 @@ A small and random number of false trips (trips that were not driven by the driv
 
 The challenge of this competition is to identify trips which are not from the driver of interest, based on their telematic features. There is to predict a probability that each trip was taken by the driver of interest.
 
-==> My approach: 
+**==> My approach: **
+
 1) First to be able to visually understand what are the similarities between the 200 routes associated to one driver, and the difference between two drivers.
 2)Create algorithms capable of predicting with a probability P the likelihood that a route has been driven by the designated driver
 
