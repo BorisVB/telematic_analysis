@@ -7,112 +7,177 @@
 # For each trip, these information are written on csv files
 ####################################################################################################################################
 
-
+import os
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import random
 
-def scatter_plot (file_x, file_y, column_x, column_y):
-	color=['b','g','r']
-	x=getData(file_x,column_x)
-	y=getData(file_y,column_y)
-	plt.scatter(x,y, c=random.choice(color), alpha=0.5)
-	plt.ylabel(column_x)
-	plt.xlabel(column_y)
-
-def label_point(x, y, val, ax):
-    a = pd.concat({'x': x, 'y': y, 'val': val}, axis=1)
-    print a
-    for i, point in a.iterrows():
-        ax.text(point['x'], point['y'], str(point['val']))
-
-def scatter_plot_mu_sigma_driver (driver,folder_name): # scatter plot (mu,sigma) for speed or acceleration for the 200 trips of a driver
-	result=pd.DataFrame(columns=["mu","sigma"])
-	for i in range(1,201):
-		file=folder_name +"/"+`driver`+"_"+`i`+".csv"
-		df=pd.read_csv(file)
-		df=df.drop(df.columns[[0]],axis=1)
-		# print df
-		result.loc[i]=[df.norm.mean(), df.norm.std()]
-	# print result
-	result=result.dropna()
-	print result.mu
-	print result.sigma
-
-	ax=result.plot(kind="scatter", x="mu", y="sigma")
-
-	ax.set_title("Scatter plot (m/s) of " + folder_name)
-
-	# Adding labels on points to identify visually the outlying routes
-
-	for k, v in result.iterrows():
-		ax.annotate(k, v, xytext=(-3,5), textcoords='offset points', fontsize=8, color='darkslategrey')
+def listing_drivers(folder_dir): 	        # Create a sorted list with all the drivers id
+    list_drivers=sorted(os.listdir(folder_dir)) #remove first element (DS_store. file)
+    list_drivers=list_drivers[1:]  
+    list_drivers = [int(i) for i in list_drivers] 
+    list_drivers = sorted(list_drivers)
+    # print list_drivers
+    return list_drivers
 
 
-def scatter_plot_mu_sigma_speed (driver,folder_name): # scatter plot (mu,sigma) for speed or acceleration for the 200 trips of a driver
-	result_hw=pd.DataFrame(columns=["mu","sigma"])
-	result_mr=pd.DataFrame(columns=["mu","sigma"])
-	result_br=pd.DataFrame(columns=["mu","sigma"])
-	# print result
-	for i in range(1,201):
-		file=folder_name +"/"+`driver`+"_"+`i`+".csv"
-		df=pd.read_csv(file)
-		df=df.drop(df.columns[[0]],axis=1)
+def compute_speeds(file):
+	df=pd.read_csv(file,delimiter=',', dtype = float)
+	dfminusfirst=df[1:].reset_index()
+	# print dfminusfirst
+	dfminuslast=df[:-1]
+	# print dfminuslast
+
+	speed_vector=pd.DataFrame()
+	speed_norm=pd.DataFrame()
+
+	speed_vector["x"]=dfminusfirst["x"]-dfminuslast["x"]
+	speed_vector["y"]=dfminusfirst["y"]-dfminuslast["y"]
+	speed_vector.loc[-1]=[0,0]
+	speed_vector.index=speed_vector.index+1
+	speed_vector=speed_vector.sort()
+
+	speed_norm["norm"]=(speed_vector["x"]**2+speed_vector["y"]**2)**0.5
+	# print speed_norm
+
+	#remove anormal data (speed>56m/s)
+	for i in range(len(speed_norm.index)):
+		# print "i is : " + `i`
+		# print speed_norm.iat[i,0]
+		j=1
+		if speed_norm.iat[i,0]>56 and i>0 and (i+j)<len(speed_norm.index):
+			sup_norm=speed_norm.iat[i+j,0]
+			sup_vect_x=speed_vector.iat[i+j,0]
+			sup_vect_y=speed_vector.iat[i+j,1]
+			while speed_norm.iat[i+j,0]>56 and (i+j+1)<len(speed_norm.index):
+				sup_norm=speed_norm.iat[i+j+1,0]
+				# print speed_norm.iat[i+j,0]
+				sup_vect_x=speed_vector.iat[i+j+1,0]
+				sup_vect_y=speed_vector.iat[i+j+1,1]
+				j+=1
+			for k in range(0,j):
+				speed_norm.iat[i+k,0]=(speed_norm.iat[i-1,0]+sup_norm)/2
+				speed_vector.iat[i+k,0]=(speed_vector.iat[i-1,0]+sup_vect_x)/2
+				speed_vector.iat[i+k,1]=(speed_vector.iat[i-1,1]+sup_vect_y)/2
+
+	# print speed_norm
+	# print df['x']
+	# # print df.iloc[[3]]
+	return (speed_vector, speed_norm)
+
+def compute_angles(speed_norm_file,speed_vector_file):
+	speed_norm=pd.read_csv( speed_norm_file,delimiter=',', dtype = float)
+	speed_vector=pd.read_csv( speed_vector_file,delimiter=',', dtype = float)
+	sp_norm_plus=speed_norm[1:].reset_index()
+	sp_norm_minus=speed_norm[:-1]
+	sp_vector_plus=speed_vector[1:].reset_index()
+	sp_vector_minus=speed_vector[:-1]
+	Theta=pd.DataFrame()
+	Theta["Angle"]= (360/(2*(np.pi)))*np.arccos(((sp_vector_plus["x"]*sp_vector_minus["x"])+(sp_vector_plus["y"]*sp_vector_minus["y"]))/(sp_norm_plus["norm"]*sp_norm_minus["norm"]))
+	Theta.fillna(0,inplace=True)
+	Theta.loc[-1]=[0]
+	Theta.index=Theta.index+1
+	# print Theta
+	return Theta
+
+def compute_acceleration(speed_vector_file):
+	speed_vector=pd.read_csv( speed_vector_file,delimiter=',', dtype = float)
+	sp_vector_plus=speed_vector[1:].reset_index()
+	sp_vector_minus=speed_vector[:-1]
+	
+	acceleration_vector=pd.DataFrame()
+	acceleration_norm=pd.DataFrame()
+
+	acceleration_vector["x"]=sp_vector_plus["x"]-sp_vector_minus["x"]
+	acceleration_vector["y"]=sp_vector_plus["y"]-sp_vector_minus["y"]
+	acceleration_vector.loc[-1]=[0,0]
+	acceleration_vector.index=acceleration_vector.index+1
+
+	acceleration_norm["norm"]=(acceleration_vector["x"]**2 + acceleration_vector["y"]**2)**0.5
+
+	print acceleration_norm
+
+	return (acceleration_vector,acceleration_norm)
+
+def compute_stops(speed_norm_file):
+	speed_norm=pd.read_csv( speed_norm_file,delimiter=',', dtype = float)
+	stop_info=pd.DataFrame()
+	start=10
+	stop=len(speed.norm.index)-60
+	if len(speed.norm.index)>60:
+		for i in range(start,stop) :
+			if speed_norm.iat[i,0]<0.5 and speed_norm.iat[i-1,0]>0.5: # Nouveau Stop
+				k=1
+				while speed_norm[i+k,0]<0.5 and i+k<stop:
+					k=k+1
+				stop_info.iat[i,"a - 3sec"]=speed_norm.iat[i-3,0]/3
+				stop_info.iat[i,"a - 2sec"]=speed_norm.iat[i-2,0]/2
+				stop_info.iat[i,"a - 1sec"]=speed_norm.iat[i-1,0]
+				stop_info.iat[i,"duration"]=k
+				stop_info.iat[i,"a + 3sec"]=speed_norm.iat[i+3,0]/3
+				stop_info.iat[i,"a + 2sec"]=speed_norm.iat[i+2,0]/2
+				stop_info.iat[i,"a + 1sec"]=speed_norm.iat[i+1,0]
+	else:
+		stop_info.loc[0] = pd.Series({"a - 3sec":0, "a - 2sec":0, "a - 1sec":0, "duration":0, "a + 3sec":0, "a + 2sec":0, "a + 1sec":0})
+	return stop_info
+
+def write_csv_speed(list_drivers):
+	for drivers in list_drivers:
+		print 'driver is '+ `drivers`
+		for k in range(1,201):
+			# print "route is" +`k`
+			file='drivers/' +`drivers`+'/'+`k`+'.csv'
+			(speed_vector, speed_norm)=compute_speeds(file)
+			path_vector="speed_vector/"+`drivers`+"_"+`k`+".csv"
+			# print speed_vector
+			speed_vector.to_csv(path_vector)
+			path_norm="speed_norm/"+`drivers`+"_"+`k`+".csv"
+			speed_norm.to_csv(path_norm)
+
+def write_csv_angles(list_drivers):
+	for drivers in list_drivers:
+		print 'driver is '+ `drivers`
+		for k in range(1,201):
+			# print "route is" +`k`
+			speed_norm_file='speed_norm/' +`drivers`+'_'+`k`+'.csv'
+			speed_vector_file='speed_vector/' +`drivers`+'_'+`k`+'.csv'
+
+			Theta=compute_angles(speed_norm_file,speed_vector_file)
+			
+			path_Theta="Theta/"+`drivers`+"_"+`k`+".csv"
+			print Theta
+			Theta.to_csv(path_Theta)
 		
-		temp_hw=df["norm"][(df.norm>22)]
-		temp_mr=df["norm"][(df.norm<22) & (df.norm>16)]
-		temp_br=df["norm"][(df.norm<16)]
 
-		result_hw.loc[i]=[temp_hw.mean(), temp_hw.std()]
-		# print result_hw.loc[i]
-		result_mr.loc[i]=[temp_mr.mean(), temp_mr.std()]
-		result_br.loc[i]=[temp_br.mean(), temp_br.std()]
+def write_csv_acceleration(list_drivers):
+	for drivers in list_drivers:
+		print 'driver is '+ `drivers`
+		for k in range(1,201):
+			# print "route is" +`k`
+			file='speed_vector/' +`drivers`+'_'+`k`+'.csv'
+			(acceleration_vector, acceleration_norm)=compute_speeds(file)
+			path_vector="acceleration_vector/"+`drivers`+"_"+`k`+".csv"
+			acceleration_vector.to_csv(path_vector)
+			path_norm="acceleration_norm/"+`drivers`+"_"+`k`+".csv"
+			acceleration_norm.to_csv(path_norm)
 
-	result_hw=result_hw.dropna()
-	result_br=result_br.dropna()
-	result_mr=result_mr.dropna()
-	# print result_mr
-
-	fig, axes = plt.subplots(nrows=1, ncols=3)
-	result_hw.plot(ax=axes[0], kind="scatter", x="mu", y="sigma")
-	result_mr.plot(ax=axes[1], kind="scatter", x="mu", y="sigma")
-	result_br.plot(ax=axes[2], kind="scatter", x="mu", y="sigma")
-	axes[0].set_title("Highway (m/s)")
-	axes[1].set_title("Midroad (m/s)")
-	axes[2].set_title("Backroad (m/s)")
-
-	# Adding labels on points to identify visually the outlying routes
-
-	for k, v in result_hw.iterrows():
-		axes[0].annotate(k, v, xytext=(-3,5), textcoords='offset points', fontsize=8, color='darkslategrey')
-	for k, v in result_mr.iterrows():
-		axes[1].annotate(k, v,xytext=(-3,5), textcoords='offset points', fontsize=8, color='darkslategrey')
-	for k, v in result_br.iterrows():
-		axes[2].annotate(k, v,xytext=(-3,5), textcoords='offset points', fontsize=8, color='darkslategrey')
-
-def getData(file,column):
-	df=pd.read_csv(file)
-	return df[column]
+def write_csv_stops(list_drivers):
+	for drivers in list_drivers:
+		print 'driver is '+ `drivers`
+		for k in range(1,201):
+			# print "route is" +`k`
+			file='speed_norm/' +`drivers`+'_'+`k`+'.csv'
+			stop_info=compute_stops(file)
+			path_vector="stop_info/"+`drivers`+"_"+`k`+".csv"
+			stop_info.to_csv(path_vector)
 
 def main():
-	driver_1 = 1
-	driver_2 =1
-	route_1 = 1
-	route_2 = 1
-	file_x="Theta/"+`driver_1`+"_"+`route_1`+".csv"
-	file_y="acceleration_norm/"+`driver_1`+"_"+`route_1`+".csv"
-	column_x= "Angle"
-	column_y= "norm"
-	folder_name_1="speed_norm"
-	folder_name_2="acceleration_norm"
+	folder_dir='/Users/borisvalensi/desktop/telematic_analysis/drivers'
+	list_drivers=listing_drivers(folder_dir)
+	# print 'total number of drivers is ' +`len(list_drivers)`
+	# write_csv_speed(list_drivers)
+	write_csv_angles(list_drivers)
+	# write_csv_acceleration(list_drivers)
 
-	scatter_plot(file_x, file_y, column_x, column_y)
-	scatter_plot_mu_sigma_speed (driver_1,folder_name_1)
-	scatter_plot_mu_sigma_driver (driver_1,folder_name_2)
 
-	plt.show()
-	return
-
-if __name__ == '__main__':
+if __name__=="__main__":
 	main()
