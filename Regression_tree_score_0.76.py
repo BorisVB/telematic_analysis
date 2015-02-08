@@ -51,9 +51,6 @@ def features_1(driver):
 	return features[features["driver"]==driver]
 
 def prepare_X(driver,X_0):
-	# Remove the routes from driver (y=1) in the X_0 dataframe:
-	# X_0=X_0.drop(X_0.index[driver])
-	# print X_0[1:10]
 	# Prepare vector features:
 	X_1=features_1(driver)
 	X_1=X_1.drop(X_1.columns[[0,1,2]], axis=1)
@@ -120,45 +117,37 @@ def prepare_X_advanced(driver,X_0):
 
 
 def performance_cv(Y_pred, Y_prob, Y_true):
-	# print len(Y_pred)
-	# print len(Y_prob)
-	# print len(Y_true)
-	# # Y_temp=(Y_true[[1]]).values.ravel()
-	# # Y_temp=np.array(Y_temp).reshape((500,1))
-	# # Y_pred=np.array(Y_pred).reshape((500,1))
+	Y_temp=(Y_true[[1]]).values.ravel()
+	Y_temp=np.array(Y_temp).reshape((500,1))
+	Y_pred=np.array(Y_pred).reshape((500,1))
 	
-	# accuracy=metrics.accuracy_score(Y_temp, Y_pred)
+	accuracy=metrics.accuracy_score(Y_temp, Y_pred)
 	
-	# # average_precision=metrics.average_precision(Y_true[[1]], pd.DataFrame(Y_pred))
-	# # f1_score=metrics.f1_score(Y_true[[1]],Y_pred)
-	# precision_score=metrics.precision_score(Y_true[[1]], Y_pred)
-	# recall_score=metrics.recall_score(Y_true[[1]], Y_pred)
-	
-	# print "accuracy_scpre is %d" %100*accuracy
-
-	# print "average_precision is %d" %100*average_precision
-	# print "f1_score is %d" %100*f1_score
-	# print "precision_score is %d" %100*precision_score
-	# print "recall is %d" %100*recall_score
+	average_precision=metrics.average_precision(Y_true[[1]], pd.DataFrame(Y_pred))
+	f1_score=metrics.f1_score(Y_true[[1]],Y_pred)
+	precision_score=metrics.precision_score(Y_true[[1]], Y_pred)
+	recall_score=metrics.recall_score(Y_true[[1]], Y_pred)
 	roc_auc_score=metrics.roc_auc_score(Y_true, Y_prob)
+
+	print "accuracy_score is %d" %100*accuracy
+	print "average_precision is %d" %100*average_precision
+	print "f1_score is %d" %100*f1_score
+	print "precision_score is %d" %100*precision_score
+	print "recall is %d" %100*recall_score
 	print "roc_auc_score is " +`roc_auc_score`
-	# print Y_prob
-	# print Y_true
+
+
 	Y_prob_one=Y_pred[:70]
-	# print Y_prob_one
 	p_ones=Y_prob_one.mean()
-	# print len(Y_prob_one)
 	print "average proba for ones is " +str(p_ones)
 
 	Y_prob_zeros=Y_pred[70:]
 	p_zeros=Y_prob_zeros.mean()
 	print "average proba for zeros is " +str(p_zeros)
 	Y_zeros=Y_true[70:]
-	# print len(Y_zeros)
 
 	return roc_auc_score
 
-	# pc_zeros_detected=len()
 def GBRT(driver,X_0):
 	X_200, X_train, Y_train, X_cv, Y_cv = prepare_X_advanced(driver,X_0)
 
@@ -168,20 +157,13 @@ def GBRT(driver,X_0):
 	for k in range(0,3):
 		print "trial is %d" %k
 		GBRT = GradientBoostingClassifier(n_estimators=1000, learning_rate=0.05, max_depth=6, random_state=k, subsample=1, warm_start=False)
-		# print "ready to GBRT "
-		# print X_train.shape
-		# print X_cv.shape
 
 		GBRT.fit(X_train, Y_train)
-		# GBRT.score(X_cv, y_cv)
-		# print X_cv
-		# print X_train
 		Y_pred=GBRT.predict(X_cv)
 		Y_prob=GBRT.predict_proba(X_cv)
 		Y_prob=pd.DataFrame(Y_prob)
 
 		Y_res_temp=pd.DataFrame(GBRT.predict_proba(X_200))
-		# Y_pred=Y_pred[:,1]
 
 		score=performance_cv(Y_pred, Y_prob, Y_cv)
 
@@ -191,7 +173,6 @@ def GBRT(driver,X_0):
 
 	idx=score_res.index(max(score_res))
 	Res=Y_res[idx]
-	# print Res[[1]]
 	return Res[[1]]
 
 def GBRT_all(list_drivers):
@@ -225,11 +206,6 @@ features=pd.read_csv(doc)
 
 def main():
 	list_drivers=listing_drivers()
-	# print features[features["driver"]==1][:10]
-	# features_0(list_drivers)
-	# preprocessing(1,list_drivers)
-	# feature_1(1)
-	# log_reg(1,list_drivers)
 	GBRT_all(list_drivers)
 
 if __name__ == '__main__':
