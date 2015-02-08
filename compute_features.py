@@ -4,7 +4,7 @@ Program computing several features based on inital GPS coordinates of the routes
  -Duration of the trip
  -Average speeds and quartiles
  -Number of stops/average duration of stops
- -% of the time on highway/backroad/midroad
+ - Percentage of the time on highway/backroad/midroad
  A previous version included the calculation of acceleration quartiles and decelartion in curves, this has been removed for now on as I am focusing 
 the study on speeds but will eventually add the features back.
 """
