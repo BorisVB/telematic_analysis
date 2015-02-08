@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import random
 import csv
 
-# pour rempacer par le nom dans get column il faut trouver le numero de la colonne en regardant la premiere ligne
+# Get the values in a column as a list
 
 def getColumn(filename, driver, column):
     doc = csv.reader(open(filename), delimiter=',', lineterminator='\n',quotechar='"')
